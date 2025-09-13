@@ -1,0 +1,60 @@
+<?php
+
+
+include "../db.php";
+session_start();
+
+if(isset($_POST['addroom'])){
+    $roomno = $_POST['roomno'];
+    $roomno = mysqli_real_escape_string($conn, $roomno);
+    $roomno = htmlentities($roomno);
+	
+    $floor = $_POST['floor'];
+    $floor = mysqli_real_escape_string($conn, $floor);
+    $floor = htmlentities($floor);
+    $capacity = $_POST['cap'];
+    $capacity = mysqli_real_escape_string($conn, $capacity);
+    $capacity = htmlentities($capacity);
+    
+    $check_query = "SELECT * FROM room WHERE room_no = '$roomno' AND floor = '$floor'";
+    $check_result = mysqli_query($conn, $check_query);
+
+    if(mysqli_num_rows($check_result) > 0) {
+        $_SESSION['roomnot'] = "Error!! This room is already added.";
+        header("Location: add_room.php");
+        exit(); // Ensure the script stops after redirection
+    } else {
+        $insert = "INSERT INTO room (room_no, floor, capacity) VALUES ('$roomno', '$floor', '$capacity')";
+        $insert_query = mysqli_query($conn, $insert);
+        if($insert_query) {
+            $_SESSION['room'] = "New room added successfully.";
+        } else {
+            $_SESSION['roomnot'] = "Error!! New room not added.";
+        }
+        header("Location: add_room.php");
+    
+	  $jesus="select rid from room where room_no='$roomno' AND floor='$floor'";
+	  $check_jesus = mysqli_query($conn, $jesus);
+	 $table_name = $jesus;
+    $check_table_query = "SHOW TABLES LIKE '$table_name'";
+    $table_exists = mysqli_query($conn, $check_table_query);
+
+    if(mysqli_num_rows($table_exists) == 0){
+        // Table doesn't exist, create it
+        $create_table_query = "
+            CREATE TABLE `$table_name` (
+               `student_id` int(11) NOT NULL,
+				`password` varchar(255) NOT NULL,
+				`name` varchar(100) NOT NULL,
+				`email` varchar(255) ,
+				`class` int(11) NOT NULL,
+				`rollno` int(11) NOT NULL
+            )
+        ";
+        mysqli_query($conn, $create_table_query);
+    }
+
+        exit(); // Ensure the script stops after redirection
+    }
+}
+?>

@@ -1,0 +1,48 @@
+<?php
+include '../db.php';
+session_start();
+
+if (isset($_POST['addallotment'])) {
+    $roomno = mysqli_real_escape_string($conn, htmlentities($_POST['room']));
+    $floor = mysqli_real_escape_string($conn, htmlentities($_POST['floor'])); // Added floor input
+    $class = mysqli_real_escape_string($conn, htmlentities($_POST['class']));
+    $start = mysqli_real_escape_string($conn, htmlentities($_POST['start']));
+    $end = mysqli_real_escape_string($conn, htmlentities($_POST['end']));
+
+    // Sanitize and create table name
+    
+    $table_name =$roomno
+
+    // Insert the new allotment into batch table
+    $insert = "INSERT INTO batch (class_id, room_id, startno, endno) VALUES ('$class', '$roomno', '$start', '$end')";
+    $insert_query = mysqli_query($conn, $insert);
+
+    if ($insert_query) {
+        // Fetch students based on roll number range from the dynamically constructed table
+        $fetch_students = "SELECT rollno FROM students WHERE class = '$class' AND rollno BETWEEN '$start' AND '$end'";
+        $result = mysqli_query($conn, $fetch_students);
+
+        if ($result) {
+            while ($student = mysqli_fetch_assoc($result)) {
+                $rollno = $student['rollno'];
+
+                // Insert students into the dynamically named table
+                $insert_students = "INSERT INTO `$table_name` (rollno) VALUES ('$rollno')";
+                $insert_students_query = mysqli_query($conn, $insert_students);
+
+                if (!$insert_students_query) {
+                    $_SESSION['batchnot'] = "Error!! Some students could not be placed in table '$table_name'.";
+                    header("Location: dashboard.php");
+                    exit();
+                }
+            }
+            $_SESSION['batch'] = "New allotment placed successfully and students assigned.";
+        } else {
+            $_SESSION['batchnot'] = "Error!! Could not fetch students.";
+        }
+    } else {
+        $_SESSION['batchnot'] = "Error!! New allotment not placed.";
+    }
+    header("Location: dashboard.php");
+}
+?>
